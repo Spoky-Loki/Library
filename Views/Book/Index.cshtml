@@ -1,0 +1,33 @@
+﻿
+@{
+    ViewBag.Title = "Книги";
+}
+
+@model List<Library.Models.BookModel>
+
+<h2>Книги</h2>
+
+<table class="table table-bordered table-striped">
+    <tr>
+        <th>Название</th>
+        <th>Автор</th>
+        <th>Описание</th>
+        <th>Колличество в наличии</th>
+        <th></th>
+    </tr>
+    @foreach (var book in Model)
+    {
+        <tr>
+            <td>@book.Title</td>
+            <td>@book.Author</td>
+            <td>@book.Description</td>
+            <td>@book.Count</td>
+            <td>
+                <a href="@Url.Action("Edit", "Book", new {@id=book.Id})">Редактировать</a>
+                <a href="@Url.Action("Delete", "Book", new {@id=book.Id})">Удалить</a>
+            </td>
+        </tr>
+    }
+</table>
+
+<a href="@Url.Action("Create", "Book")">Добавить книгу</a>
