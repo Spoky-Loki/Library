@@ -1,0 +1,35 @@
+﻿
+@{
+    ViewBag.Title = "Пользователи";
+}
+
+@model List<Library.Models.UserModel>
+
+<h2>Пользователи</h2>
+
+<table class="table table-bordered table-striped">
+    <tr>
+        <th>Имя</th>
+        <th>Фамилия</th>
+        <th>E-mail</th>
+        <th>Номер телефона</th>
+        <th>Адрес</th>
+        <th></th>
+    </tr>
+    @foreach (var user in Model)
+    {
+        <tr>
+            <td>@user.FirstName</td>
+            <td>@user.LastName</td>
+            <td>@user.Email</td>
+            <td>@user.PhoneNumber</td>
+            <td>@user.Address</td>
+            <td>
+                <a href="@Url.Action("Edit", "User", new {@id=user.Id})">Редактировать</a>
+                <a href="@Url.Action("Delete", "User", new {@id=user.Id})">Удалить</a>
+            </td>
+        </tr>
+    }
+</table>
+
+<a href="@Url.Action("Create", "User")">Добавить пользователя</a>

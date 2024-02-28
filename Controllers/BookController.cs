@@ -10,25 +10,25 @@ namespace Library.Controllers
 {
     public class BookController : Controller
     {
-        private NpgsqlConnection connection;
-        private NpgsqlCommand command;
+        private NpgsqlConnection DbConnection;
+        private NpgsqlCommand DbCommand;
 
         public BookController()
         {
-            connection = new NpgsqlConnection(
+            DbConnection = new NpgsqlConnection(
                 connectionString: WebConfigurationManager.ConnectionStrings["DbContext"].ConnectionString);
 
-            command = new NpgsqlCommand();
-            command.Connection = connection;
+            DbCommand = new NpgsqlCommand();
+            DbCommand.Connection = DbConnection;
         }
 
         [HttpGet]
         public async Task<ActionResult> Index()
         {
-            command.Connection.Open();
+            DbCommand.Connection.Open();
 
-            command.CommandText = $"SELECT * FROM Books";
-            NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+            DbCommand.CommandText = $"SELECT * FROM Books";
+            NpgsqlDataReader reader = await DbCommand.ExecuteReaderAsync();
 
             var books = new List<BookModel>();
             while (await reader.ReadAsync())
@@ -53,14 +53,14 @@ namespace Library.Controllers
         [HttpPost]
         public async Task<ActionResult> Create(BookModel bookModel)
         {
-            command.Connection.Open();
+            DbCommand.Connection.Open();
 
-            command.CommandText = $"INSERT INTO Books (title, author, description, count) VALUES (@title, @author, @description, @count)";
-            command.Parameters.AddWithValue("@title", bookModel.Title);
-            command.Parameters.AddWithValue("@author", bookModel.Author);
-            command.Parameters.AddWithValue("@description", bookModel.Description);
-            command.Parameters.AddWithValue("@count", bookModel.Count);
-            await command.ExecuteNonQueryAsync();
+            DbCommand.CommandText = $"INSERT INTO Books (title, author, description, count) VALUES (@title, @author, @description, @count)";
+            DbCommand.Parameters.AddWithValue("@title", bookModel.Title);
+            DbCommand.Parameters.AddWithValue("@author", bookModel.Author);
+            DbCommand.Parameters.AddWithValue("@description", bookModel.Description);
+            DbCommand.Parameters.AddWithValue("@count", bookModel.Count);
+            await DbCommand.ExecuteNonQueryAsync();
 
             return RedirectToAction("Index");
         }
@@ -68,10 +68,10 @@ namespace Library.Controllers
         [HttpGet]
         public async Task<ActionResult> Edit(int id)
         {
-            command.Connection.Open();
+            DbCommand.Connection.Open();
 
-            command.CommandText = $"SELECT * FROM Books WHERE id = {id}";
-            NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+            DbCommand.CommandText = $"SELECT * FROM Books WHERE id = {id}";
+            NpgsqlDataReader reader = await DbCommand.ExecuteReaderAsync();
 
             BookModel book = new BookModel();
             while (await reader.ReadAsync())
@@ -93,15 +93,15 @@ namespace Library.Controllers
         [HttpPost]
         public async Task<ActionResult> Edit(int id, BookModel bookModel)
         {
-            command.Connection.Open();
+            DbCommand.Connection.Open();
 
-            command.CommandText = $"UPDATE Books " +
+            DbCommand.CommandText = $"UPDATE Books " +
                 $"SET title='{bookModel.Title}'," +
                 $"author='{bookModel.Author}'," +
                 $"description='{bookModel.Description}'," +
                 $"count='{bookModel.Count}' " +
                 $"WHERE id={id}";
-            await command.ExecuteNonQueryAsync();
+            await DbCommand.ExecuteNonQueryAsync();
 
             return View();
         }
@@ -109,10 +109,10 @@ namespace Library.Controllers
         [HttpGet]
         public async Task<ActionResult> Delete(int id)
         {
-            command.Connection.Open();
+            DbCommand.Connection.Open();
 
-            command.CommandText = $"DELETE FROM Books WHERE id={id}";
-            await command.ExecuteNonQueryAsync();
+            DbCommand.CommandText = $"DELETE FROM Books WHERE id={id}";
+            await DbCommand.ExecuteNonQueryAsync();
 
             return RedirectToAction("Index");
         }
