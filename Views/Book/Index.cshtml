@@ -9,6 +9,7 @@
 
 <table class="table table-bordered table-striped">
     <tr>
+        <th>Индификатор</th>
         <th>Название</th>
         <th>Автор</th>
         <th>Описание</th>
@@ -18,6 +19,7 @@
     @foreach (var book in Model)
     {
         <tr>
+            <td>@book.Id</td>
             <td>@book.Title</td>
             <td>@book.Author</td>
             <td>@book.Description</td>

@@ -1,0 +1,35 @@
+﻿
+@{
+    ViewBag.Title = "Выданные книги";
+}
+
+@model List<Library.Models.LoanIndexViewModel>
+
+<h2>Выданные книги</h2>
+
+<table class="table table-bordered table-striped">
+    <tr>
+        <th>Название книги</th>
+        <th>Имя пользователя</th>
+        <th>Фамилия пользователя</th>
+        <th>Дата выдачи</th>
+        <th>Дата возврата</th>
+        <th></th>
+    </tr>
+    @foreach (var loan in Model)
+    {
+        <tr>
+            <td>@loan.BookTitle</td>
+            <td>@loan.UserFirstName</td>
+            <td>@loan.UserLastName</td>
+            <td>@loan.LoanDate</td>
+            <td>@loan.ReturnDate</td>
+            <td>
+                <a href="@Url.Action("ReturnBook", "Loan", new {@id=loan.Id})">Вернуть книгу</a>
+            </td>
+        </tr>
+    }
+</table>
+
+<a href="@Url.Action("Create", "Loan")">Выдать книгу</a>
+
