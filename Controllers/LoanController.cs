@@ -1,4 +1,5 @@
-﻿using Library.Models;
+﻿using Library.Data.Repository;
+using Library.Models;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -11,40 +12,19 @@ namespace Library.Controllers
 {
     public class LoanController : Controller
     {
-        private NpgsqlConnection DbConnection;
-        private NpgsqlCommand DbCommand;
+        private LoanRepository loanRepository;
+        private BookRepository bookRepository;
 
         public LoanController()
         {
-            DbConnection = new NpgsqlConnection(
-                connectionString: WebConfigurationManager.ConnectionStrings["DbContext"].ConnectionString);
-
-            DbCommand = new NpgsqlCommand();
-            DbCommand.Connection = DbConnection;
+            loanRepository = LoanRepository.GetInstance();
+            bookRepository = BookRepository.GetInstance();
         }
 
         [HttpGet]
         public async Task<ActionResult> Index()
         {
-            DbCommand.Connection.Open();
-
-            DbCommand.CommandText = $"SELECT l.id, l.loan_date, l.return_date, u.first_name, u.last_name, b.title " +
-                $"FROM loans l " +
-                $"JOIN users u ON l.user_id = u.id " +
-                $"JOIN books b ON l.book_id = b.id";
-            NpgsqlDataReader reader = await DbCommand.ExecuteReaderAsync();
-
-            var loans = new List<LoanIndexViewModel>();
-            while (await reader.ReadAsync())
-            {
-                loans.Add(new LoanIndexViewModel(
-                    (int)reader["id"],
-                    reader["title"] as string,
-                    reader["first_name"] as string,
-                    reader["last_name"] as string,
-                    reader["loan_date"].ToString().Split(' ').First(),
-                    reader["return_date"].ToString().Split(' ').First()));
-            }
+            var loans = await loanRepository.GetLoans();
 
             return View(loans);
         }
@@ -52,27 +32,19 @@ namespace Library.Controllers
         [HttpGet]
         public ActionResult Create()
         {
-            return View(new LoanCreateViewModel());
+            return View(loanRepository.GetEmptyLoan());
         }
 
         [HttpPost]
         public async Task<ActionResult> Create(LoanCreateViewModel loanModel)
         {
-            int bookCount = await GetBookCount(loanModel.BookId);
+            int bookCount = await bookRepository.GetBookCount(loanModel.BookId);
             if (bookCount == 0)
                 return RedirectToAction("Index");
 
-            DbCommand.Connection.Open();
+            await loanRepository.AddLoan(loanModel);
 
-            DbCommand.CommandText = $"INSERT INTO Loans (book_id, user_id, loan_date) VALUES (@book, @user, @date)";
-            DbCommand.Parameters.AddWithValue("@book", loanModel.BookId);
-            DbCommand.Parameters.AddWithValue("@user", loanModel.UserId);
-            DbCommand.Parameters.AddWithValue("@date", DateTime.Parse(loanModel.LoanDate));
-            await DbCommand.ExecuteNonQueryAsync();
-
-            DbCommand.Connection.Close();
-
-            await ReduceBookCount(loanModel.BookId, bookCount);
+            await bookRepository.ReduceBookCount(loanModel.BookId);
 
             return RedirectToAction("Index");
         }
@@ -80,77 +52,17 @@ namespace Library.Controllers
         [HttpGet]
         public async Task<ActionResult> ReturnBook(int id)
         {
-            DbCommand.Connection.Open();
+            var isReturned = await loanRepository.IsReturned(id);
+            if (isReturned)
+                return RedirectToAction("Index");
 
-            DbCommand.CommandText = $"UPDATE Loans " +
-                $"SET return_date='{DateTime.Now}' " +
-                $"WHERE id = {id}";
-            await DbCommand.ExecuteNonQueryAsync();
+            await loanRepository.SetReturnDate(id);
 
-            DbCommand.Connection.Close();
+            var bookId = await loanRepository.GetBookId(id);
 
-            var tuple = await GetBookIdAndBookCountOnLoanId(id);
-
-            await AddBookCount(tuple.Item1, tuple.Item2);
+            await bookRepository.AddBookCount(bookId);
 
             return RedirectToAction("Index");
-        }
-
-        private async Task<int> GetBookCount(int BookId)
-        {
-            DbCommand.Connection.Open();
-
-            DbCommand.CommandText = $"SELECT count FROM Books where id={BookId}";
-            NpgsqlDataReader reader = await DbCommand.ExecuteReaderAsync();
-
-            await reader.ReadAsync();
-            int count = (int)reader["count"];
-
-            DbCommand.Connection.Close();
-
-            return count;
-        }
-
-        private async Task ReduceBookCount(int BookId, int count)
-        {
-            DbCommand.Connection.Open();
-
-            DbCommand.CommandText = $"UPDATE Books " +
-                $"SET count={--count} " +
-                $"WHERE id = {BookId}";
-            await DbCommand.ExecuteNonQueryAsync();
-
-            DbCommand.Connection.Close();
-        }
-
-        private async Task AddBookCount(int BookId, int count)
-        {
-            DbCommand.Connection.Open();
-
-            DbCommand.CommandText = $"UPDATE Books " +
-                $"SET count={++count} " +
-                $"WHERE id = {BookId}";
-            await DbCommand.ExecuteNonQueryAsync();
-
-            DbCommand.Connection.Close();
-        }
-
-        private async Task<Tuple<int, int>> GetBookIdAndBookCountOnLoanId(int loanId)
-        {
-            DbCommand.Connection.Open();
-
-            DbCommand.CommandText = $"SELECT b.id, b.count FROM Loans l " +
-                $"JOIN books b ON l.book_id=b.id " +
-                $"WHERE l.id = {loanId}";
-            NpgsqlDataReader reader = await DbCommand.ExecuteReaderAsync();
-
-            await reader.ReadAsync();
-            int count = (int)reader["count"];
-            int bookId = (int)reader["id"];
-
-            DbCommand.Connection.Close();
-
-            return Tuple.Create(bookId, count);
         }
     }
 }

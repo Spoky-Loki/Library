@@ -167,6 +167,13 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\LoanController.cs" />
     <Compile Include="Controllers\UserController.cs" />
+    <Compile Include="Data\DbContext.cs" />
+    <Compile Include="Data\Interfaces\IBookRepository.cs" />
+    <Compile Include="Data\Interfaces\ILoanRepository.cs" />
+    <Compile Include="Data\Interfaces\IUserRepository.cs" />
+    <Compile Include="Data\Repository\BookRepository.cs" />
+    <Compile Include="Data\Repository\LoanRepository.cs" />
+    <Compile Include="Data\Repository\UserRepository.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
