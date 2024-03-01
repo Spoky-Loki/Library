@@ -7,7 +7,12 @@
 
 <h2>Книги</h2>
 
-<table class="table table-bordered table-striped">
+<a href="@Url.Action("Create", "Book")">Добавить книгу</a>
+
+<br />
+<br />
+
+<table class="table table-bordered table-striped" id="bookTable">
     <tr>
         <th>Индификатор</th>
         <th>Название</th>
@@ -31,5 +36,3 @@
         </tr>
     }
 </table>
-
-<a href="@Url.Action("Create", "Book")">Добавить книгу</a>

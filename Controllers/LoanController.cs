@@ -1,11 +1,7 @@
 ﻿using Library.Data.Repository;
 using Library.Models;
-using Npgsql;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Configuration;
 using System.Web.Mvc;
 
 namespace Library.Controllers
@@ -14,17 +10,27 @@ namespace Library.Controllers
     {
         private LoanRepository loanRepository;
         private BookRepository bookRepository;
+        private UserRepository userRepository;
 
         public LoanController()
         {
             loanRepository = LoanRepository.GetInstance();
             bookRepository = BookRepository.GetInstance();
+            userRepository = UserRepository.GetInstance();
         }
 
         [HttpGet]
         public async Task<ActionResult> Index()
         {
             var loans = await loanRepository.GetLoans();
+
+            return View(loans);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> History()
+        {
+            var loans = await loanRepository.GetReturned();
 
             return View(loans);
         }
@@ -38,15 +44,30 @@ namespace Library.Controllers
         [HttpPost]
         public async Task<ActionResult> Create(LoanCreateViewModel loanModel)
         {
-            int bookCount = await bookRepository.GetBookCount(loanModel.BookId);
-            if (bookCount == 0)
+            if (ModelState.IsValid)
+            {
+                if (!await bookRepository.ExistBookWithId(loanModel.BookId)) 
+                {
+                    ModelState.AddModelError("", "Книги с таким индификатором не существует");
+                    if (!await userRepository.ExistUserWithId(loanModel.UserId))
+                    {
+                        ModelState.AddModelError("", "Пользователя с таким индификатором не существует");
+                    }
+                    return View(loanModel);
+                }
+
+                int bookCount = await bookRepository.GetBookCount(loanModel.BookId);
+                if (bookCount == 0)
+                    return RedirectToAction("Index");
+
+                await loanRepository.AddLoan(loanModel);
+
+                await bookRepository.ReduceBookCount(loanModel.BookId);
+
                 return RedirectToAction("Index");
+            }
 
-            await loanRepository.AddLoan(loanModel);
-
-            await bookRepository.ReduceBookCount(loanModel.BookId);
-
-            return RedirectToAction("Index");
+            return View(loanModel);
         }
 
         [HttpGet]

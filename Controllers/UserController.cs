@@ -31,7 +31,10 @@ namespace Library.Controllers
         [HttpPost]
         public async Task<ActionResult> Create(UserModel userModel)
         {
-            await userRepository.AddUser(userModel);
+            if(ModelState.IsValid)
+                await userRepository.AddUser(userModel);
+            else
+                return View(userModel);
 
             return RedirectToAction("Index");
         }
@@ -50,9 +53,12 @@ namespace Library.Controllers
         [HttpPost]
         public async Task<ActionResult> Edit(int id, UserModel userModel)
         {
-            await userRepository.UpdateUser(id, userModel);
+            if (ModelState.IsValid)
+                await userRepository.UpdateUser(id, userModel);
+            else
+                return View(userModel);
 
-            return View();
+            return RedirectToAction("Index");
         }
 
         [HttpGet]

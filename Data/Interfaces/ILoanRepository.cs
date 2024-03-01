@@ -17,5 +17,7 @@ namespace Library.Data.Interfaces
         Task<int> GetBookId(int id);
 
         Task<bool> IsReturned(int id);
+
+        Task<List<LoanIndexViewModel>> GetReturned();
     }
 }

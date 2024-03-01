@@ -1,8 +1,5 @@
 ﻿using Library.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Library.Data.Interfaces
@@ -26,5 +23,7 @@ namespace Library.Data.Interfaces
         Task AddBookCount(int id);
 
         BookModel GetEmptyBook();
+
+        Task<bool> ExistBookWithId(int id);
     }
 }
